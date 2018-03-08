@@ -73,6 +73,7 @@ namespace HapGp.Controllers
 
             }
 
+            //
             public static PostResponseModel _Regist(PostInparamModel value)
             {
                 try
@@ -81,7 +82,7 @@ namespace HapGp.Controllers
                     {
                         if (server.UserRegist_CheckLIDNotExsist(value.LID))
                         {
-                            server.UserRegist(value.LID, value.PWD);
+                            server.UserRegist(value.LID, value.PWD, value.Params?.ContainsKey("teacher")!=null?Enums.UserRole.Teacher:Enums.UserRole.Student);
                         }
                         else
                         {

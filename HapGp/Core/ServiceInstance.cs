@@ -125,6 +125,28 @@ namespace HapGp.Core
             return false;
         }
 
+
+        public bool UserRegist(string LID, string PWD_ori,UserRole role)
+        {
+            if (UserRegist_CheckLIDNotExsist(LID) && PWD_ori != "")
+            {
+                string PWD_ori_hash = Userx.HashOripwd(LID, PWD_ori);
+                string PWD_ori_hash_aes = FrameCorex.CurrnetAppEncryptor.Encrypt(PWD_ori_hash);
+
+                Userx _Userx = new UserModel
+                {
+                    LID = LID,
+                    PWD = PWD_ori_hash_aes
+                };
+                _Userx.Infos.UserPermission = Permission.User;
+                _Userx.Infos.Role = role;
+                db.Entry((UserModel)_Userx).State = EntityState.Added;
+                db.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
         public override string ToString()
         {
             return "ServiceIncetance " + Info;
