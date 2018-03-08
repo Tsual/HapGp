@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  hapgp:
+    image: hapgp
+    build:
+      context: .
+      dockerfile: HapGp/Dockerfile

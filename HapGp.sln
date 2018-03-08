@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HapGp", "HapGp\HapGp.csproj", "{1198ECFF-D331-43D0-B621-6771433BFBF0}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{E4646528-296B-402B-932F-E7066431BB61}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1198ECFF-D331-43D0-B621-6771433BFBF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1198ECFF-D331-43D0-B621-6771433BFBF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1198ECFF-D331-43D0-B621-6771433BFBF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1198ECFF-D331-43D0-B621-6771433BFBF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4646528-296B-402B-932F-E7066431BB61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4646528-296B-402B-932F-E7066431BB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4646528-296B-402B-932F-E7066431BB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4646528-296B-402B-932F-E7066431BB61}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA4C0088-AB96-419C-9595-D25C8DB18332}
+	EndGlobalSection
+EndGlobal
