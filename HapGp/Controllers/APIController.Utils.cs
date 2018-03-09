@@ -10,13 +10,18 @@ using HapGp.Exceptions;
 using HapGp.ModelInstance;
 using System.Threading;
 using System.Diagnostics;
+using HapGp.Helper;
 
 namespace HapGp.Controllers
 {
     public partial class APIController
     {
+
+
         private static class Utils
         {
+
+
             public static PostResponseModel _AddRecord(PostInparamModel value)
             {
                 try
@@ -86,7 +91,7 @@ namespace HapGp.Controllers
                     {
                         if (server.UserRegist_CheckLIDNotExsist(value.LID))
                         {
-                            server.UserRegist(value.LID, value.PWD, value.Params?.ContainsKey("teacher")!=null?Enums.UserRole.Teacher:Enums.UserRole.Student);
+                            server.UserRegist(value.LID, value.PWD, value.Params.ContainsKey("teacher")?Enums.UserRole.Teacher:Enums.UserRole.Student);
                         }
                         else
                         {
@@ -198,10 +203,18 @@ namespace HapGp.Controllers
                         }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
 
-                        user.SetProject(null, value.Params["projectname"], value.Params["subtitle"], DateTime.Parse(value.Params["starttime"]), DateTime.Parse(value.Params["endtime"]));
+                        user.SetProject(null,
+                            value.Params["projectname"],
+                            value.Params.Get("subtitle"),
+                            value.Params.Get("starttime") == null ? null : (DateTime?)DateTime.Parse(value.Params.Get("starttime")),
+                            value.Params.Get("endtime") == null ? null : (DateTime?)DateTime.Parse(value.Params.Get("endtime")));
 
-                        
-
+                        return new PostResponseModel()
+                        {
+                            Message = "添加课程成功",
+                            Result = Enums.APIResult.Success,
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
                     }
                 }
                 catch (FPException ex)
@@ -212,11 +225,7 @@ namespace HapGp.Controllers
                         Result = Enums.APIResult.Error
                     };
                 }
-                return new PostResponseModel()
-                {
-                    Message = "添加课程成功",
-                    Result = Enums.APIResult.Success
-                };
+
             }
 
             public static PostResponseModel _ModifyProject(PostInparamModel value)
@@ -233,6 +242,13 @@ namespace HapGp.Controllers
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
 
                         user.SetProject(int.Parse(value.Params["projectid"]), value.Params["projectname"], value.Params["subtitle"], DateTime.Parse(value.Params["starttime"]), DateTime.Parse(value.Params["endtime"]));
+
+                        return new PostResponseModel()
+                        {
+                            Message = "修改课程信息成功",
+                            Result = Enums.APIResult.Success,
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
                     }
                 }
                 catch (FPException ex)
@@ -243,11 +259,7 @@ namespace HapGp.Controllers
                         Result = Enums.APIResult.Error
                     };
                 }
-                return new PostResponseModel()
-                {
-                    Message = "修改课程信息成功",
-                    Result = Enums.APIResult.Success
-                };
+
             }
 
             public static PostResponseModel _SelectClass(PostInparamModel value)
@@ -262,7 +274,16 @@ namespace HapGp.Controllers
                             FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
                         }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
-                        user.SelectProject(int.Parse(value.Params["projectid"]));
+
+                        if (value.Params.ContainsKey("projectid")) user.SelectProject(int.Parse(value.Params["projectid"]));
+                        else if (value.Params.ContainsKey("projectname")) user.SelectProject(value.Params["projectname"]);
+                        else throw new FPException("未指定选择的课程");
+                        return new PostResponseModel()
+                        {
+                            Message = "添加课程成功",
+                            Result = Enums.APIResult.Success,
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
                     }
                 }   
                 catch (FPException ex)
@@ -273,11 +294,7 @@ namespace HapGp.Controllers
                         Result = Enums.APIResult.Error
                     };
                 }
-                return new PostResponseModel()
-                {
-                    Message = "添加课程成功",
-                    Result = Enums.APIResult.Success
-                };
+
             }
 
             public static PostResponseModel _GetClass(PostInparamModel value)
@@ -297,7 +314,40 @@ namespace HapGp.Controllers
                         {
                             Message = "获取课程",
                             Result = Enums.APIResult.Success,
-                            ExtResult = { { "class", user.QueryClass() } }
+                            ExtResult = { { "class", user.QueryClass() } },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+
+            public static PostResponseModel _QueryClass(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        var tarclass=user.GetProjectInfo(value.Params["projectname"]);
+                        return new PostResponseModel()
+                        {
+                            Message = "获取课程",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = { { "课程ID", tarclass.Key }, { "课程名称", tarclass.ProjectName }, { "课程描述", tarclass.Subtitle }, { "课程开始时间", tarclass.StartTime.Value.ToShortTimeString() }, { "课程结束时间", tarclass.EndTime.Value.ToShortTimeString() } },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
                     }
                 }

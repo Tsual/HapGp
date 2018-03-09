@@ -18,6 +18,8 @@
 
         SelectClass,
 
-        GetClass
+        GetClass,
+
+        QueryClass
     }
 }

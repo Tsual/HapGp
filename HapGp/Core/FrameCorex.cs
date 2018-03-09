@@ -41,6 +41,9 @@ namespace HapGp.Core
                 }
             }
 
+            //确保linq创建数据表
+            new AppDbContext().Database.EnsureCreated();
+
         }
 
         static FrameCorex()
@@ -162,7 +165,8 @@ namespace HapGp.Core
             if (_AvaServiceInstances.Count == 0)
                 _CreateInstance();
             var ins = _AvaServiceInstances[0];
-            _ServiceInstances.Add(ins, new ServiceInstanceInfo() { LoginHashToken = _AppHashToken(ins) });
+            lock(_ServiceInstances)
+                _ServiceInstances.Add(ins, new ServiceInstanceInfo() { LoginHashToken = _AppHashToken(ins) });
             _AvaServiceInstances.Remove(ins);
 
             Logger.Log<string>(LogLevel.Information, new EventId(), null, null, (o, ex) => { return "ServiceInstance-CreateNew-" + DateTime.Now; });
@@ -175,7 +179,8 @@ namespace HapGp.Core
             if (_AvaServiceInstances.Count == 0)
                 _CreateInstance();
             var ins = _AvaServiceInstances[0];
-            _ServiceInstances.Add(ins, info);
+            lock (_ServiceInstances)
+                _ServiceInstances.Add(ins, info);
             _AvaServiceInstances.Remove(ins);
 
             Logger.Log<string>(LogLevel.Information, new EventId(), null, null, (o, ex) => { return "ServiceInstance-Recover-" + DateTime.Now; });
@@ -203,7 +208,8 @@ namespace HapGp.Core
             if (_AvaServiceInstances.Count < 
                 Convert.ToDouble(AppConfigs.Current[Enums.AppConfigEnum.ServiceInstanceObjectDestroylimit]) * _ServiceInstances.Count)
                 _AvaServiceInstances.Add(Instance);
-            _ServiceInstances.Remove(Instance);
+            lock (_ServiceInstances)
+                _ServiceInstances.Remove(Instance);
         }
         #endregion
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace HapGp.Models
@@ -14,12 +15,10 @@ namespace HapGp.Models
         public string ProjectName { get; set; }     
         public string Subtitle { get; set; }
         public int TeacherID { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        
-
-
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
     }
+
 
 
 }

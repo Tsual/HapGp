@@ -124,7 +124,7 @@ namespace HapGp.ModelInstance
         public Info Infos { get => _Infos; set => _Infos = value; }
         #endregion
         #region 课程表
-        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime StartTime, DateTime EndTime)
+        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime? StartTime, DateTime? EndTime)
         {
             if (Infos.Role != Enums.UserRole.Teacher)
             {
@@ -142,12 +142,13 @@ namespace HapGp.ModelInstance
             {
                 db.Entry(new ProjectModel()
                 {
-                    StartTime = StartTime,
-                    EndTime = EndTime,
+                    StartTime = StartTime.Value,
+                    EndTime = EndTime.Value,
                     ProjectName = ProjectName,
                     Subtitle = Subtitle,
                     TeacherID = _Origin.ID
                 }).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+                db.Database.EnsureCreated();
                 db.SaveChanges();
             }
             else
@@ -156,9 +157,10 @@ namespace HapGp.ModelInstance
                 if (obj == null) throw new FPException("课程不存在");
                 obj.ProjectName = ProjectName;
                 obj.Subtitle = Subtitle;
-                obj.StartTime = StartTime;
-                obj.EndTime = EndTime;
+                obj.StartTime = StartTime.Value;
+                obj.EndTime = EndTime.Value;
                 db.Entry(obj).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+                db.Database.EnsureCreated();
                 db.SaveChanges();
             }
 
@@ -177,6 +179,7 @@ namespace HapGp.ModelInstance
             try
             {
                 db.M_ProjectModels.Remove(db.M_ProjectModels.Find(ProjectID));
+                db.Database.EnsureCreated();
                 db.SaveChanges();
             }
             catch(Exception)
@@ -184,6 +187,16 @@ namespace HapGp.ModelInstance
 
             }
         }
+
+        public void SelectProject(string ProjectName)
+        {
+            var reslist = (from t in db.M_ProjectModels
+                           where t.ProjectName == ProjectName
+                           select t).ToList();
+            if (reslist.Count > 0)
+                SelectProject(reslist[0].Key);
+        }
+
         public void SelectProject(int ProjectID)
         {
             if (Infos.Role != Enums.UserRole.Student)
@@ -208,10 +221,21 @@ namespace HapGp.ModelInstance
 
             db.Entry(new ProjectSelectModel() { ProjectID = ProjectID, StudentID = _Origin.ID }).State
                 = Microsoft.EntityFrameworkCore.EntityState.Added;
+            db.Database.EnsureCreated();
             db.SaveChanges();
 
 
         }
+
+        public ProjectModel GetProjectInfo(string ProjectName)
+        {
+            var reslis = (from t in db.M_ProjectModels
+                          where ProjectName == t.ProjectName
+                          select t).ToList();
+            if (reslis.Count > 0) return reslis[0];
+            return null;
+        }
+
         public ProjectModel GetProjectInfo(int? ProjectID, string ProjectName, string Subtitle, DateTime StartTime, DateTime EndTime)
         {
             var reslis = (from t in db.M_ProjectModels
@@ -254,6 +278,7 @@ namespace HapGp.ModelInstance
         {
             AppDbContext db = new AppDbContext();
             db.Entry((UserModel)this).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            db.Database.EnsureCreated();
             db.SaveChanges();
         }
 
