@@ -15,6 +15,8 @@ namespace HapGp.Models
         public DbSet<UserModel> M_UserModels { get; set; }
         public DbSet<AppConfigModel> M_AppConfigModels { get; set; }
         public DbSet<UserRecordModel> M_UserRecordModels { get; set; }
+        public DbSet<ProjectModel> M_ProjectModels { get; set; }
+        public DbSet<ProjectSelectModel> M_ProjectSelectModels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +26,8 @@ namespace HapGp.Models
             modelBuilder.Entity<UserModel>();
             modelBuilder.Entity<AppConfigModel>();
             modelBuilder.Entity<UserRecordModel>();
+            modelBuilder.Entity<ProjectModel>();
+            modelBuilder.Entity<ProjectSelectModel>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

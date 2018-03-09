@@ -11,6 +11,19 @@ namespace HapGp.Exceptions
         public Userx User { get => _User; set => _User = value; }
     }
 
+
+
+    public class UserRoleException : UserException
+    {
+        private UserRole curRole;
+        private UserRole reqRole;
+
+        public UserRole ReqRole { get => reqRole; set => reqRole = value; }
+        public UserRole CurRole { get => curRole; set => curRole = value; }
+
+        public override string Message => "Your role is "+ curRole.ToString() +" ,Require :"+ reqRole.ToString();
+    }
+
     public class UserPermissionException: UserException
     {
         private Permission _RequiredPermission;

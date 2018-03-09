@@ -10,6 +10,14 @@
 
         GetRecord,
 
-        DeleteRecord
+        DeleteRecord,
+
+        AddProject,
+
+        ModifyProject,
+
+        SelectClass,
+
+        GetClass
     }
 }

@@ -6,12 +6,16 @@ using HapGp.Helper;
 using HapGp.Interfaces;
 using System;
 using System.Diagnostics;
+using System.Linq;
+using HapGp.Exceptions;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace HapGp.ModelInstance
 {
     public partial class Userx
     {
-
+        public AppDbContext db = new AppDbContext();
         public static string HashOripwd(string LID, string PWD_ori) => new HashProvider().Hash(LID + PWD_ori);
 
 
@@ -118,6 +122,132 @@ namespace HapGp.ModelInstance
         private Info _Infos;
 
         public Info Infos { get => _Infos; set => _Infos = value; }
+        #endregion
+        #region 课程表
+        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime StartTime, DateTime EndTime)
+        {
+            if (Infos.Role != Enums.UserRole.Teacher)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Teacher,
+                    User = this
+                };
+            }
+
+            if (ProjectName == null || ProjectName == "") throw new FPException("课程名称不能为空 ");
+
+            if (ProjectID == null)
+            {
+                db.Entry(new ProjectModel()
+                {
+                    StartTime = StartTime,
+                    EndTime = EndTime,
+                    ProjectName = ProjectName,
+                    Subtitle = Subtitle,
+                    TeacherID = _Origin.ID
+                }).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+                db.SaveChanges();
+            }
+            else
+            {
+                var obj = db.M_ProjectModels.Find(ProjectID.Value);
+                if (obj == null) throw new FPException("课程不存在");
+                obj.ProjectName = ProjectName;
+                obj.Subtitle = Subtitle;
+                obj.StartTime = StartTime;
+                obj.EndTime = EndTime;
+                db.Entry(obj).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+                db.SaveChanges();
+            }
+
+        }
+        public void DeleteProject(int ProjectID)
+        {
+            if (Infos.Role != Enums.UserRole.Teacher)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Teacher,
+                    User = this
+                };
+            }
+            try
+            {
+                db.M_ProjectModels.Remove(db.M_ProjectModels.Find(ProjectID));
+                db.SaveChanges();
+            }
+            catch(Exception)
+            {
+
+            }
+        }
+        public void SelectProject(int ProjectID)
+        {
+            if (Infos.Role != Enums.UserRole.Student)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Student,
+                    User = this
+                };
+            }
+
+            if ((from t in db.M_ProjectSelectModels
+                 where t.ProjectID == ProjectID
+                 && t.StudentID == _Origin.ID
+                 select t).ToList().Count > 0)
+                throw new ProjectAlreadySelectException()
+                {
+                    ProjectID = ProjectID,
+                    User = this
+                };
+
+            db.Entry(new ProjectSelectModel() { ProjectID = ProjectID, StudentID = _Origin.ID }).State
+                = Microsoft.EntityFrameworkCore.EntityState.Added;
+            db.SaveChanges();
+
+
+        }
+        public ProjectModel GetProjectInfo(int? ProjectID, string ProjectName, string Subtitle, DateTime StartTime, DateTime EndTime)
+        {
+            var reslis = (from t in db.M_ProjectModels
+                          where ProjectID == null ? true : ProjectID.Value == t.Key
+                          && ProjectName == null ? true : ProjectName == t.ProjectName
+                          && Subtitle == null ? true : Subtitle == t.Subtitle
+                          && StartTime == null ? true : DateTime.Now.CompareTo(StartTime) < 0
+                           && EndTime == null ? true : DateTime.Now.CompareTo(EndTime) > 0
+                          select t).ToList();
+            if (reslis.Count > 0) return reslis[0];
+            return null;
+        }
+
+        public IEnumerable<ProjectModel> QueryClass()
+        {
+            if (Infos.Role != Enums.UserRole.Student)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Student,
+                    User = this
+                };
+            }
+
+            var splist = (from t in db.M_ProjectSelectModels
+                          where t.StudentID == _Origin.ID
+                          select t.ProjectID).ToList();
+
+            return (
+                 from t in db.M_ProjectModels
+                 where splist.Contains(t.Key)
+                 select t).ToList();
+
+
+        }
         #endregion
 
         public void SaveInfos()

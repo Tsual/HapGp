@@ -49,7 +49,7 @@ namespace HapGp.ModelInstance
             var lis = (from t in db.M_UserRecordModels
                        where t.LID == _LID && t.Key == key
                        select t).ToArray();
-            if (lis.Length == 1) return userx.Encryptor.Decrypt(lis[0].Value);
+            if (lis.Length == 1) return lis[0].Value;
             return null;
         }
 
@@ -66,7 +66,7 @@ namespace HapGp.ModelInstance
             if (lis.Length == 1)
             {
                 var ins = lis[0];
-                ins.Value = userx.Encryptor.Encrypt(value);
+                ins.Value = value;
                 db.Entry(ins).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
             }
             else
@@ -75,7 +75,7 @@ namespace HapGp.ModelInstance
                 {
                     LID = _LID,
                     Key = key,
-                    Value = userx.Encryptor.Encrypt(value)
+                    Value = value
                 };
                 db.Entry(ins).State = Microsoft.EntityFrameworkCore.EntityState.Added;
             }

@@ -21,9 +21,13 @@ namespace HapGp.Controllers
             {
                 try
                 {
-                    using (var server = FrameCorex.GetService())
+                    using (var server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
                     {
-                        server.UserLogin(value.LID, value.PWD);
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
                         Userx User = FrameCorex.ServiceInstanceInfo(server).User;
                         foreach (var t in value.Params)
                             if (t.Value != null)
@@ -151,9 +155,13 @@ namespace HapGp.Controllers
             {
                 try
                 {
-                    using (ServiceInstance server = FrameCorex.GetService())
+                    using ( ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
                     {
-                        server.UserLogin(value.LID, value.PWD);
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
                         foreach (var t in value.Params.Values)
                         {
@@ -175,6 +183,135 @@ namespace HapGp.Controllers
                     Result = Enums.APIResult.Success
                 };
             }
+
+            //projectname subtitle starttime endtime
+            public static PostResponseModel _AddProject(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+
+                        user.SetProject(null, value.Params["projectname"], value.Params["subtitle"], DateTime.Parse(value.Params["starttime"]), DateTime.Parse(value.Params["endtime"]));
+
+                        
+
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+                return new PostResponseModel()
+                {
+                    Message = "添加课程成功",
+                    Result = Enums.APIResult.Success
+                };
+            }
+
+            public static PostResponseModel _ModifyProject(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+
+                        user.SetProject(int.Parse(value.Params["projectid"]), value.Params["projectname"], value.Params["subtitle"], DateTime.Parse(value.Params["starttime"]), DateTime.Parse(value.Params["endtime"]));
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+                return new PostResponseModel()
+                {
+                    Message = "修改课程信息成功",
+                    Result = Enums.APIResult.Success
+                };
+            }
+
+            public static PostResponseModel _SelectClass(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        user.SelectProject(int.Parse(value.Params["projectid"]));
+                    }
+                }   
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+                return new PostResponseModel()
+                {
+                    Message = "添加课程成功",
+                    Result = Enums.APIResult.Success
+                };
+            }
+
+            public static PostResponseModel _GetClass(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        var res = user.QueryClass();
+                        return new PostResponseModel()
+                        {
+                            Message = "获取课程",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = { { "class", user.QueryClass() } }
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+
+
         }
     }
 }

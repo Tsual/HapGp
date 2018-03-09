@@ -1,0 +1,9 @@
+SELECT * FROM Users;
+SELECT * FROM UserRecord;
+SELECT * FROM AppConfig;
+SELECT * FROM StorageModel;
+
+delete from Users;
+delete from UserRecord;
+delete from AppConfig;
+delete from StorageModel;
