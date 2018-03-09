@@ -126,7 +126,7 @@ namespace HapGp.Core
         }
 
 
-        public bool UserRegist(string LID, string PWD_ori,UserRole role)
+        public bool UserRegist(string LID, string PWD_ori,UserRole role,string name)
         {
             if (UserRegist_CheckLIDNotExsist(LID) && PWD_ori != "")
             {
@@ -140,6 +140,7 @@ namespace HapGp.Core
                 };
                 _Userx.Infos.UserPermission = Permission.User;
                 _Userx.Infos.Role = role;
+                _Userx.Infos.Name = name;
                 db.Entry((UserModel)_Userx).State = EntityState.Added;
                 db.SaveChanges();
                 return true;

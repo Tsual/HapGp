@@ -49,6 +49,7 @@ namespace HapGp.ModelInstance
             Debug.WriteLine("User Instance Active!<<LID : " + obj.LID);
             return res;
         }
+
         #region 密钥类
         private class UserEncryptor : IEncryptor
         {
@@ -321,21 +322,12 @@ namespace HapGp.ModelInstance
         }
         #endregion
         #region 签到
-        public void SignIn(double x,double y)
+        public void SignIn(double x,double y,int studentid)
         {
-            //角色
-            if (Infos.Role != Enums.UserRole.Student)
-            {
-                throw new UserRoleException()
-                {
-                    CurRole = Infos.Role,
-                    ReqRole = Enums.UserRole.Student,
-                    User = this
-                };
-            }
+
             //时间段
             var cis = (from t in db.M_ProjectSelectModels
-                       where t.StudentID == _Origin.ID
+                       where t.StudentID == studentid
                        select t.ProjectID).ToList();
 
             var scis = (from t in db.M_ProjectModels
@@ -347,27 +339,91 @@ namespace HapGp.ModelInstance
 
             if (scis.Count < 1) throw new FPException("学生在这个时间段并没有课程");
 
-            var ins = scis[0];
-            if(ins.SiEast!=0||ins.SiSouth!=0|| ins.SiNorth != 0|| ins.SiWest != 0)
+            if (x != 0 || y != 0)
             {
-                if (!(x < ins.SiEast
-                && x > ins.SiWest
-                && y < ins.SiNorth
-                && y > ins.SiSouth))
-                    throw new FPException("签到地点误差较大，请检查");
+                var ins = scis[0];
+                if (ins.SiEast != 0 || ins.SiSouth != 0 || ins.SiNorth != 0 || ins.SiWest != 0)
+                {
+                    if (!(x < ins.SiEast
+                    && x > ins.SiWest
+                    && y < ins.SiNorth
+                    && y > ins.SiSouth))
+                        throw new FPException("签到地点误差较大，请检查");
+                }
+                else
+                {
+                    throw new ClassLocationMissing() { User = this, Project1 = ins };
+                }
             }
-            else
-            {
-                throw new ClassLocationMissing() { User = this, Project1 = ins };
-            }
+
             
 
-            db.Entry(new SigninModel() { ProjectID = scis[0].Key, StudentID = _Origin.ID, Time = DateTime.Now }).State =
+            db.Entry(new SigninModel() { ProjectID = scis[0].Key, StudentID = studentid, Time = DateTime.Now }).State =
                 Microsoft.EntityFrameworkCore.EntityState.Added;
             db.SaveChanges();
 
 
 
+        }
+
+        public Dictionary<string, Dictionary<string,List<string>>> querySignIn(int projectid)
+        {
+            if (Infos.Role != Enums.UserRole.Teacher)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Teacher,
+                    User = this
+                };
+            }
+            Dictionary<string, Dictionary<string, List<string>>> res = new Dictionary<string, Dictionary<string, List<string>>>();
+
+            var projs = projectid == 0 ? (from t in db.M_ProjectModels
+                                          where t.TeacherID == _Origin.ID
+                                          select t).ToList() : new List<ProjectModel>() { db.M_ProjectModels.Find(projectid) };
+
+            foreach (var  proj in projs)
+            {
+                var plist = (from t in db.M_ProjectSelectModels
+                             where t.ProjectID == proj.Key
+                             select t.StudentID).ToList();
+
+                var signlist = (from t in db.SigninModel
+                                where t.ProjectID == proj.Key
+                                &&t.Time.Day==DateTime.Now.Day
+                                select t.StudentID).ToList();
+
+                List<string> signinlist = new List<string>();
+                foreach (var t in signlist)
+                    signinlist.Add(((Userx)db.M_UserModels.Find(t)).Infos.Name);
+
+                List<string> usigninlist = new List<string>();
+                foreach(var t in plist)
+                    if(!signlist.Contains(t))
+                        usigninlist.Add(((Userx)db.M_UserModels.Find(t)).Infos.Name);
+                res.Add("课程[" + proj.ProjectName + "]签到情况", new Dictionary<string, List<string>>() { { "已签到", signinlist }, { "未签到", usigninlist } });
+            }
+            return res;
+        }
+
+        public void TeacherSignIn(IEnumerable<string> names)
+        {
+            if (Infos.Role != Enums.UserRole.Teacher)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Teacher,
+                    User = this
+                };
+            }
+            var ids = (from t in db.M_UserModels
+                       where names.Contains(((Userx)t).Infos.Name)
+                       select t.ID);
+
+            foreach(var t in ids)
+                this.SignIn(0, 0, t);
         }
         #endregion
 

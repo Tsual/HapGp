@@ -22,6 +22,10 @@
 
         QueryClass,
 
-        SignIn
+        SignIn,
+
+        QuerySignIn,
+
+        TeacherSignIn
     }
 }
