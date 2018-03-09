@@ -124,7 +124,7 @@ namespace HapGp.ModelInstance
         public Info Infos { get => _Infos; set => _Infos = value; }
         #endregion
         #region 课程表
-        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime? StartTime, DateTime? EndTime)
+        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime? StartTime, DateTime? EndTime,DayOfWeek dayofWeek,double west,double south,double north,double east)
         {
             if (Infos.Role != Enums.UserRole.Teacher)
             {
@@ -140,13 +140,23 @@ namespace HapGp.ModelInstance
 
             if (ProjectID == null)
             {
+                if ((from t in db.M_ProjectModels
+                     where t.ProjectName == ProjectName
+                     select t).ToList().Count > 0)
+                    throw new FPException("课程名称已经存在");
+
                 db.Entry(new ProjectModel()
                 {
                     StartTime = StartTime.Value,
                     EndTime = EndTime.Value,
                     ProjectName = ProjectName,
                     Subtitle = Subtitle,
-                    TeacherID = _Origin.ID
+                    TeacherID = _Origin.ID,
+                    DayofWeek=dayofWeek,
+                    SiEast=east,
+                    SiNorth=north,
+                    SiSouth=south,
+                    SiWest=west
                 }).State = Microsoft.EntityFrameworkCore.EntityState.Added;
                 db.Database.EnsureCreated();
                 db.SaveChanges();
@@ -159,6 +169,11 @@ namespace HapGp.ModelInstance
                 obj.Subtitle = Subtitle;
                 obj.StartTime = StartTime.Value;
                 obj.EndTime = EndTime.Value;
+                obj.DayofWeek = dayofWeek;
+                obj.SiWest = west;
+                obj.SiSouth = north;
+                obj.SiEast = east;
+                obj.SiNorth = north;
                 db.Entry(obj).State = Microsoft.EntityFrameworkCore.EntityState.Added;
                 db.Database.EnsureCreated();
                 db.SaveChanges();
@@ -195,6 +210,8 @@ namespace HapGp.ModelInstance
                            select t).ToList();
             if (reslist.Count > 0)
                 SelectProject(reslist[0].Key);
+            else
+                throw new FPException("制定课程不存在");
         }
 
         public void SelectProject(int ProjectID)
@@ -218,6 +235,36 @@ namespace HapGp.ModelInstance
                     ProjectID = ProjectID,
                     User = this
                 };
+
+            var tarclass
+                = db.M_ProjectModels.Find(ProjectID);
+
+            if (tarclass == null)
+                throw new FPException("所选课程不存在");
+
+            var pids = (from t in db.M_ProjectSelectModels
+                        where t.StudentID == _Origin.ID
+                        select t.ProjectID).ToList();
+
+            foreach (var t in pids)
+            {
+                var ins = db.M_ProjectModels.Find(t);
+                if (ins.DayofWeek == DateTime.Now.DayOfWeek)
+                {
+                    if (!(DateTime.Parse(ins.StartTime.Value.ToShortTimeString()) > DateTime.Parse(tarclass.EndTime.Value.ToShortTimeString())) ||
+                            DateTime.Parse(ins.EndTime.Value.ToShortTimeString()) < DateTime.Parse(tarclass.StartTime.Value.ToShortTimeString()))
+                    {
+                        throw new FPException("该时间段已经有课(" + ins.ProjectName + ")啦");
+                    }
+                }
+            }
+
+            //if ((from t in db.M_ProjectSelectModels
+            //     where db.M_ProjectModels.Find(t.ProjectID).DayofWeek == DateTime.Now.DayOfWeek
+            //     && !(DateTime.Parse(db.M_ProjectModels.Find(t.ProjectID).StartTime.Value.ToShortTimeString()) > DateTime.Parse(tarclass.EndTime.Value.ToShortTimeString())) ||
+            //     DateTime.Parse(db.M_ProjectModels.Find(t.ProjectID).EndTime.Value.ToShortTimeString()) < DateTime.Parse(tarclass.StartTime.Value.ToShortTimeString())
+            //     select t).ToList().Count > 0)
+            //    throw new FPException("该时间段已经有课啦");
 
             db.Entry(new ProjectSelectModel() { ProjectID = ProjectID, StudentID = _Origin.ID }).State
                 = Microsoft.EntityFrameworkCore.EntityState.Added;
@@ -269,6 +316,56 @@ namespace HapGp.ModelInstance
                  from t in db.M_ProjectModels
                  where splist.Contains(t.Key)
                  select t).ToList();
+
+
+        }
+        #endregion
+        #region 签到
+        public void SignIn(double x,double y)
+        {
+            //角色
+            if (Infos.Role != Enums.UserRole.Student)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Student,
+                    User = this
+                };
+            }
+            //时间段
+            var cis = (from t in db.M_ProjectSelectModels
+                       where t.StudentID == _Origin.ID
+                       select t.ProjectID).ToList();
+
+            var scis = (from t in db.M_ProjectModels
+                        where t.DayofWeek == DateTime.Now.DayOfWeek
+                        && cis.Contains(t.Key)
+                        && DateTime.Parse(t.StartTime.Value.ToShortTimeString()) < DateTime.Now
+                        && DateTime.Parse(t.EndTime.Value.ToShortTimeString()) > DateTime.Now
+                        select t).ToList();
+
+            if (scis.Count < 1) throw new FPException("学生在这个时间段并没有课程");
+
+            var ins = scis[0];
+            if(ins.SiEast!=0||ins.SiSouth!=0|| ins.SiNorth != 0|| ins.SiWest != 0)
+            {
+                if (!(x < ins.SiEast
+                && x > ins.SiWest
+                && y < ins.SiNorth
+                && y > ins.SiSouth))
+                    throw new FPException("签到地点误差较大，请检查");
+            }
+            else
+            {
+                throw new ClassLocationMissing() { User = this, Project1 = ins };
+            }
+            
+
+            db.Entry(new SigninModel() { ProjectID = scis[0].Key, StudentID = _Origin.ID, Time = DateTime.Now }).State =
+                Microsoft.EntityFrameworkCore.EntityState.Added;
+            db.SaveChanges();
+
 
 
         }

@@ -2,11 +2,6 @@
 
 namespace HapGp.Models
 {
-    /*
-            Models.AppDbContext db = new Models.AppDbContext();
-            db.Database.EnsureCreated();
-            UserRecordModel
-    */
     public class AppDbContext:DbContext
     {
         public DbSet<BasicApplicationModel> BasicApplicationModels { get; set; }
@@ -17,6 +12,8 @@ namespace HapGp.Models
         public DbSet<UserRecordModel> M_UserRecordModels { get; set; }
         public DbSet<ProjectModel> M_ProjectModels { get; set; }
         public DbSet<ProjectSelectModel> M_ProjectSelectModels { get; set; }
+        public DbSet<SigninModel> SigninModel { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +25,7 @@ namespace HapGp.Models
             modelBuilder.Entity<UserRecordModel>();
             modelBuilder.Entity<ProjectModel>();
             modelBuilder.Entity<ProjectSelectModel>();
+            modelBuilder.Entity<SigninModel>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

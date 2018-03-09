@@ -15,9 +15,16 @@ namespace HapGp.Models
         public string ProjectName { get; set; }     
         public string Subtitle { get; set; }
         public int TeacherID { get; set; }
+        public DayOfWeek DayofWeek { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public double SiWest { get; set; }
+        public double SiNorth { get; set; }
+        public double SiSouth { get; set; }
+        public double SiEast { get; set; }
+
     }
+
 
 
 

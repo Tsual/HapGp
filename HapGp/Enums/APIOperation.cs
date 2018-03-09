@@ -20,6 +20,8 @@
 
         GetClass,
 
-        QueryClass
+        QueryClass,
+
+        SignIn
     }
 }

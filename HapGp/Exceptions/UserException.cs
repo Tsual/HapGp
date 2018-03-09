@@ -1,5 +1,6 @@
 ﻿using HapGp.Enums;
 using HapGp.ModelInstance;
+using HapGp.Models;
 using System;
 
 namespace HapGp.Exceptions
@@ -11,7 +12,14 @@ namespace HapGp.Exceptions
         public Userx User { get => _User; set => _User = value; }
     }
 
+    public class ClassLocationMissing: UserException
+    {
+        private ProjectModel Project;
 
+        public ProjectModel Project1 { get => Project; set => Project = value; }
+
+        public override string Message => "课程["+Project?.ProjectName+"]的签到地点没有设定" ;
+    }
 
     public class UserRoleException : UserException
     {
