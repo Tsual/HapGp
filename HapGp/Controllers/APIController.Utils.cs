@@ -203,18 +203,34 @@ namespace HapGp.Controllers
                         }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
 
-                        user.SetProject(null,
-                            value.Params["projectname"],
-                            value.Params.Get("subtitle"),
-                            value.Params.Get("starttime") == null ? null :
-                                (DateTime?)DateTime.Parse(value.Params.Get("starttime")),
-                            value.Params.Get("endtime") == null ? null :
-                                (DateTime?)DateTime.Parse(value.Params.Get("endtime")),
-                            (DayOfWeek)Enum.Parse(typeof(DayOfWeek), value.Params.Get("dayofweek")),
-                            DataUtils.FromStringToDouble(value.Params.Get("west")),
-                            DataUtils.FromStringToDouble(value.Params.Get("south")),
-                            DataUtils.FromStringToDouble(value.Params.Get("north")),
-                            DataUtils.FromStringToDouble(value.Params.Get("east")));
+                        try
+                        {
+                            user.SetProject(null,
+                                value.Params["projectname"],
+                                value.Params.Get("subtitle"),
+                                value.Params.Get("starttime") == null ? null :
+                                    (DateTime?)DateTime.Parse(value.Params.Get("starttime")),
+                                value.Params.Get("endtime") == null ? null :
+                                    (DateTime?)DateTime.Parse(value.Params.Get("endtime")),
+                                (DayOfWeek)Enum.Parse(typeof(DayOfWeek), value.Params.Get("dayofweek")),
+                                DataUtils.FromStringToDouble(value.Params.Get("west")),
+                                DataUtils.FromStringToDouble(value.Params.Get("south")),
+                                DataUtils.FromStringToDouble(value.Params.Get("north")),
+                                DataUtils.FromStringToDouble(value.Params.Get("east")));
+                        }
+                        catch (FPException e)
+                        {
+                            throw e;
+                        }
+                        catch (Exception e)
+                        {
+                            return new PostResponseModel()
+                            {
+                                Result = Enums.APIResult.Error,
+                                Message = "课程添加失败"
+                            };
+                        }
+
 
                         return new PostResponseModel()
                         {
@@ -359,6 +375,7 @@ namespace HapGp.Controllers
                         }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
                         var tarclass = user.GetProjectInfo(value.Params["projectname"]);
+                        if (tarclass == null) throw new FPException("获取课程不存在");
                         return new PostResponseModel()
                         {
                             Message = "获取课程",
@@ -492,6 +509,72 @@ namespace HapGp.Controllers
                     };
                 }
 
+            }
+
+            public static PostResponseModel _Login(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+
+                        return new PostResponseModel()
+                        {
+                            Message = "成功",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = { { "Role", user.Infos.Role.ToString() }, { "Name", user.Infos.Name } },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+
+            //TeacherQueryClass
+            public static PostResponseModel _TeacherQueryClass(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        return new PostResponseModel()
+                        {
+                            Message = "获取课程",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
             }
         }
     }

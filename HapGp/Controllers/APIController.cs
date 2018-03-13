@@ -18,23 +18,23 @@ namespace HapGp.Controllers
     {
 
 
-        [HttpGet]
-        public PostResponseModel Get()
-        {
-            string token = "";
-            using (var server = FrameCorex.GetService())
-            {
-                server.UserLogin("test1", "test1");
-                token = server.Info.ToString();
-                server.Info.EncryptToken = "test";
-                server.Info.DisposeInfo = false;
-            }
-            using (var server = FrameCorex.RecoverService(token, (c) => { }))
-            {
-                server.Info.EncryptToken = "check";
-            }
-            return null;
-        }
+        //[HttpGet]
+        //public PostResponseModel Get()
+        //{
+        //    string token = "";
+        //    using (var server = FrameCorex.GetService())
+        //    {
+        //        server.UserLogin("test1", "test1");
+        //        token = server.Info.ToString();
+        //        server.Info.EncryptToken = "test";
+        //        server.Info.DisposeInfo = false;
+        //    }
+        //    using (var server = FrameCorex.RecoverService(token, (c) => { }))
+        //    {
+        //        server.Info.EncryptToken = "check";
+        //    }
+        //    return null;
+        //}
 
         // GET: api/API/5
         //[HttpGet("{id}", Name = "Get")]

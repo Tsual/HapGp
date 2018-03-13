@@ -320,6 +320,28 @@ namespace HapGp.ModelInstance
 
 
         }
+
+        public IEnumerable<ProjectModel> QueryClassTeacher()
+        {
+            if (Infos.Role != Enums.UserRole.Teacher)
+            {
+                throw new UserRoleException()
+                {
+                    CurRole = Infos.Role,
+                    ReqRole = Enums.UserRole.Teacher,
+                    User = this
+                };
+            }
+
+
+
+            return (
+                 from t in db.M_ProjectModels
+                 where t.TeacherID==_Origin.ID
+                 select t).ToList();
+
+
+        }
         #endregion
         #region 签到
         public void SignIn(double x,double y,int studentid)
