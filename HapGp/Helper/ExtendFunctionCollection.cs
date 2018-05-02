@@ -32,5 +32,9 @@ namespace HapGp.Helper
             return res;
         }
 
+        public static int toInt(this string str)
+        {
+            return Convert.ToInt32(str);
+        }
     }
 }

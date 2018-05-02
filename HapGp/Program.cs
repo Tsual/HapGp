@@ -19,7 +19,7 @@ namespace HapGp
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-            .UseUrls("http://localhost:5555;http://192.168.0.118:5555")
+            .UseUrls("http://0.0.0.0:5555;")
                 .UseStartup<Startup>()
                 .Build();
     }

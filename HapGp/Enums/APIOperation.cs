@@ -30,6 +30,26 @@
 
         Login,
 
-        TeacherQueryClass
+        TeacherQueryClass,
+
+        QueryBus,
+
+        ModifyBus,
+
+        DeleteBus,
+
+        RequestLeave,
+
+        QueryLeave,
+
+        CancelLeave,
+
+        ApproveLeave,
+
+        CreateMission,
+
+        QueryMission,
+
+        FinishMission
     }
 }

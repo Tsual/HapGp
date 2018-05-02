@@ -31,6 +31,7 @@ namespace HapGp.Core
 
         private static void _DefaultConfig()
         {
+            (new AppDbContext()).Database.EnsureCreated();
             Config[Enums.AppConfigEnum.AppDBex] = DateTime.Now.ToShortDateString();
             foreach(var t in Enum.GetValues(typeof(Enums.AppConfigEnum)))
             {

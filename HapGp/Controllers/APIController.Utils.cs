@@ -11,6 +11,7 @@ using HapGp.ModelInstance;
 using System.Threading;
 using System.Diagnostics;
 using HapGp.Helper;
+using HapGp.BussinessProcessing;
 
 namespace HapGp.Controllers
 {
@@ -20,8 +21,75 @@ namespace HapGp.Controllers
 
         private static class Utils
         {
+            #region 登陆注册
+            public static PostResponseModel _Login(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
 
+                        return new PostResponseModel()
+                        {
+                            Message = "成功",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = { { "Role", user.Infos.Role.ToString() }, { "Name", user.Infos.Name } },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _Regist(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.GetService())
+                    {
+                        if (server.UserRegist_CheckLIDNotExsist(value.LID))
+                        {
+                            server.UserRegist(value.LID, value.PWD, value.Params.ContainsKey("teacher") ? Enums.UserRole.Teacher : Enums.UserRole.Student, value.Params.Get("name"));
+                        }
+                        else
+                        {
+                            return new PostResponseModel()
+                            {
+                                Message = "User already exsist",
+                                Result = Enums.APIResult.Error
+                            };
+                        }
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+                return new PostResponseModel()
+                {
+                    Message = "User regist success,welcome ",
+                    Result = Enums.APIResult.Success
+                };
+            }
+            #endregion
 
+            #region 原生功能
             public static PostResponseModel _AddRecord(PostInparamModel value)
             {
                 try
@@ -81,43 +149,6 @@ namespace HapGp.Controllers
 
 
             }
-
-            //
-            public static PostResponseModel _Regist(PostInparamModel value)
-            {
-                try
-                {
-                    using (ServiceInstance server = FrameCorex.GetService())
-                    {
-                        if (server.UserRegist_CheckLIDNotExsist(value.LID))
-                        {
-                            server.UserRegist(value.LID, value.PWD, value.Params.ContainsKey("teacher") ? Enums.UserRole.Teacher : Enums.UserRole.Student,value.Params.Get("name"));
-                        }
-                        else
-                        {
-                            return new PostResponseModel()
-                            {
-                                Message = "User already exsist",
-                                Result = Enums.APIResult.Error
-                            };
-                        }
-                    }
-                }
-                catch (FPException ex)
-                {
-                    return new PostResponseModel()
-                    {
-                        Message = ex.Message,
-                        Result = Enums.APIResult.Error
-                    };
-                }
-                return new PostResponseModel()
-                {
-                    Message = "User regist success,welcome ",
-                    Result = Enums.APIResult.Success
-                };
-            }
-
             public static PostResponseModel _GetRecord(PostInparamModel value)
             {
                 try
@@ -155,7 +186,6 @@ namespace HapGp.Controllers
                     };
                 }
             }
-
             public static PostResponseModel _DeleteRecord(PostInparamModel value)
             {
                 try
@@ -188,8 +218,9 @@ namespace HapGp.Controllers
                     Result = Enums.APIResult.Success
                 };
             }
+            #endregion
 
-            //projectname subtitle starttime endtime dayofweek
+            #region 课程
             public static PostResponseModel _AddProject(PostInparamModel value)
             {
                 try
@@ -250,7 +281,6 @@ namespace HapGp.Controllers
                 }
 
             }
-
             public static PostResponseModel _ModifyProject(PostInparamModel value)
             {
                 try
@@ -293,7 +323,6 @@ namespace HapGp.Controllers
                 }
 
             }
-
             public static PostResponseModel _SelectClass(PostInparamModel value)
             {
                 try
@@ -328,7 +357,6 @@ namespace HapGp.Controllers
                 }
 
             }
-
             public static PostResponseModel _GetClass(PostInparamModel value)
             {
                 try
@@ -361,7 +389,6 @@ namespace HapGp.Controllers
                     };
                 }
             }
-
             public static PostResponseModel _QueryClass(PostInparamModel value)
             {
                 try
@@ -401,7 +428,46 @@ namespace HapGp.Controllers
                     };
                 }
             }
+            public static PostResponseModel _TeacherQueryClass(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        return new PostResponseModel()
+                        {
+                            Message = "获取课程",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            #endregion
 
+
+
+
+
+
+            #region 签到
             public static PostResponseModel _SignIn(PostInparamModel value)
             {
                 try
@@ -442,7 +508,6 @@ namespace HapGp.Controllers
                 }
 
             }
-
             public static PostResponseModel _QuerySignIn(PostInparamModel value)
             {
                 try
@@ -477,7 +542,6 @@ namespace HapGp.Controllers
                 }
 
             }
-
             public static PostResponseModel _TeacherSignIn(PostInparamModel value)
             {
                 try
@@ -510,8 +574,11 @@ namespace HapGp.Controllers
                 }
 
             }
+            #endregion
 
-            public static PostResponseModel _Login(PostInparamModel value)
+
+            #region 校车
+            public static PostResponseModel _QueryBus(PostInparamModel value)
             {
                 try
                 {
@@ -523,12 +590,13 @@ namespace HapGp.Controllers
                             FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
                         }
                         var user = FrameCorex.ServiceInstanceInfo(server).User;
-
                         return new PostResponseModel()
                         {
-                            Message = "成功",
+                            Message = "获取校车",
                             Result = Enums.APIResult.Success,
-                            ExtResult = { { "Role", user.Infos.Role.ToString() }, { "Name", user.Infos.Name } },
+                            ExtResult = {
+                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                            },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
                     }
@@ -542,9 +610,7 @@ namespace HapGp.Controllers
                     };
                 }
             }
-
-            //TeacherQueryClass
-            public static PostResponseModel _TeacherQueryClass(PostInparamModel value)
+            public static PostResponseModel _ModifyBus(PostInparamModel value)
             {
                 try
                 {
@@ -576,6 +642,289 @@ namespace HapGp.Controllers
                     };
                 }
             }
+            public static PostResponseModel _DeleteBus(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        return new PostResponseModel()
+                        {
+                            Message = "获取课程",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            #endregion
+
+            #region 任务 
+            public static PostResponseModel _CreateMission(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        user.CreateMission(value.Params.Get("ClassID").toInt(), value.Params.Get("Name"));
+                        return new PostResponseModel()
+                        {
+                            Message = "创建任务",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _QueryMission(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        var missions = user.QueryMissions();
+                        var result= new PostResponseModel()
+                        {
+                            Message = "获取任务集",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+
+                        foreach(var t in missions)
+                        {
+                            result.ExtResult.Add(t.ID + "", t.ConvertMission());
+                        }
+
+                        return result;
+
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _FinishMission(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+
+                        user.FinishMission(value.Params.Get("MissionID").toInt());
+                        return new PostResponseModel()
+                        {
+                            Message = "任务完成",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                                
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            #endregion
+
+            #region 请假
+            public static PostResponseModel _RequestLeave(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        user.RequestLeave(Convert.ToInt32(value.Params.Get("ClassSelectID")));
+                        return new PostResponseModel()
+                        {
+                            Message = "请假成功",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _QueryLeave(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        var ret= new PostResponseModel()
+                        {
+                            Message = "获取请假单",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                        foreach(var t in user.QueryLeave())
+                        {
+                            ret.ExtResult.Add(t.ID + "", t.ConvertLeave());
+                        }
+                        return ret;
+
+
+
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _CancelLeave(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        user.CancelLeave(Convert.ToInt32(value.Params.Get("LeaveID")));
+                        return new PostResponseModel()
+                        {
+                            Message = "撤销请假成功",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            public static PostResponseModel _ApproveLeave(PostInparamModel value)
+            {
+                try
+                {
+                    using (ServiceInstance server = FrameCorex.RecoverService(value.Token, (c) => { Debug.WriteLine("Container Token not found Token: " + c); }))
+                    {
+                        if (!FrameCorex.ServiceInstanceInfo(server).IsLogin)
+                        {
+                            server.UserLogin(value.LID, value.PWD);
+                            FrameCorex.ServiceInstanceInfo(server).DisposeInfo = false;
+                        }
+                        var user = FrameCorex.ServiceInstanceInfo(server).User;
+                        user.ApproveLeave(Convert.ToInt32(value.Params.Get("LeaveID")));
+                        return new PostResponseModel()
+                        {
+                            Message = "批准假单成功",
+                            Result = Enums.APIResult.Success,
+                            ExtResult = {
+                            },
+                            UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
+                        };
+                    }
+                }
+                catch (FPException ex)
+                {
+                    return new PostResponseModel()
+                    {
+                        Message = ex.Message,
+                        Result = Enums.APIResult.Error
+                    };
+                }
+            }
+            #endregion
+
         }
     }
 }

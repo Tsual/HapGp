@@ -411,7 +411,7 @@ namespace HapGp.ModelInstance
                              where t.ProjectID == proj.Key
                              select t.StudentID).ToList();
 
-                var signlist = (from t in db.SigninModel
+                var signlist = (from t in db.M_SigninModel
                                 where t.ProjectID == proj.Key
                                 &&t.Time.Day==DateTime.Now.Day
                                 select t.StudentID).ToList();
