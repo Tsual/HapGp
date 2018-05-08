@@ -374,7 +374,7 @@ namespace HapGp.Controllers
                             Message = "获取课程",
                             Result = Enums.APIResult.Success,
                             ExtResult = {
-                                { "class", user.QueryClass().ConvertAPI() }
+                                { "class", user.QueryClass().ConvertClassInstance() }
                             },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
@@ -445,7 +445,7 @@ namespace HapGp.Controllers
                             Message = "获取课程",
                             Result = Enums.APIResult.Success,
                             ExtResult = {
-                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                                { "class", user.QueryClassTeacher().ConvertProject() }
                             },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
@@ -595,7 +595,7 @@ namespace HapGp.Controllers
                             Message = "获取校车",
                             Result = Enums.APIResult.Success,
                             ExtResult = {
-                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                                { "class", user.QueryClassTeacher().ConvertClassInstance() }
                             },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
@@ -627,7 +627,7 @@ namespace HapGp.Controllers
                             Message = "获取课程",
                             Result = Enums.APIResult.Success,
                             ExtResult = {
-                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                                { "class", user.QueryClassTeacher().ConvertClassInstance() }
                             },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };
@@ -659,7 +659,7 @@ namespace HapGp.Controllers
                             Message = "获取课程",
                             Result = Enums.APIResult.Success,
                             ExtResult = {
-                                { "class", user.QueryClassTeacher().ConvertAPI() }
+                                { "class", user.QueryClassTeacher().ConvertClassInstance() }
                             },
                             UserLoginToken = FrameCorex.ServiceInstanceInfo(server).LoginHashToken
                         };

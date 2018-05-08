@@ -65,7 +65,7 @@ namespace HapGp.ModelInstance
                         byte[] _iv = ivhash.Hashbytes(User.Origin.LID);
 
                         string ranstr = AssetsController.getLocalSequenceString(User.Origin.ID);
-                        string kstr1 = ranstr + User.Origin.LID ;
+                        string kstr1 = ranstr + User.Origin.LID;
 
                         var keyhash = new HashProvider();
                         byte[] _key = new byte[32];
@@ -125,7 +125,7 @@ namespace HapGp.ModelInstance
         public Info Infos { get => _Infos; set => _Infos = value; }
         #endregion
         #region 课程表
-        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime? StartTime, DateTime? EndTime,DayOfWeek dayofWeek,double west,double south,double north,double east)
+        public void SetProject(int? ProjectID, string ProjectName, string Subtitle, DateTime? StartTime, DateTime? EndTime, DayOfWeek dayofWeek, double west, double south, double north, double east)
         {
             if (Infos.Role != Enums.UserRole.Teacher)
             {
@@ -153,11 +153,11 @@ namespace HapGp.ModelInstance
                     ProjectName = ProjectName,
                     Subtitle = Subtitle,
                     TeacherID = _Origin.ID,
-                    DayofWeek=dayofWeek,
-                    SiEast=east,
-                    SiNorth=north,
-                    SiSouth=south,
-                    SiWest=west
+                    DayofWeek = dayofWeek,
+                    SiEast = east,
+                    SiNorth = north,
+                    SiSouth = south,
+                    SiWest = west
                 }).State = Microsoft.EntityFrameworkCore.EntityState.Added;
                 db.Database.EnsureCreated();
                 db.SaveChanges();
@@ -198,7 +198,7 @@ namespace HapGp.ModelInstance
                 db.Database.EnsureCreated();
                 db.SaveChanges();
             }
-            catch(Exception)
+            catch (Exception)
             {
 
             }
@@ -309,16 +309,28 @@ namespace HapGp.ModelInstance
                 };
             }
 
+
             var splist = (from t in db.M_ProjectSelectModels
                           where t.StudentID == _Origin.ID
                           select t.ProjectID).ToList();
 
-            return (
+            var res = (
                  from t in db.M_ProjectModels
                  where splist.Contains(t.Key)
                  select t).ToList();
 
-
+            List<ClassInstance> reslist = new List<ClassInstance>();
+            foreach (var t in res)
+            {
+                var lr = (from tt in db.M_ProjectSelectModels
+                          where tt.StudentID == _Origin.ID && tt.ProjectID == t.Key
+                          select tt).ToList();
+                var leave = (from ttt in db.M_LeaveModle
+                             where ttt.StudentID == _Origin.ID && ttt.ClassID == lr[0].Key
+                             select ttt).ToList();
+                reslist.Add(new ClassInstance(t, lr[0], leave.Count > 0 ? leave[0] : null));
+            }
+            return reslist;
         }
 
         public IEnumerable<ProjectModel> QueryClassTeacher()
@@ -337,14 +349,14 @@ namespace HapGp.ModelInstance
 
             return (
                  from t in db.M_ProjectModels
-                 where t.TeacherID==_Origin.ID
+                 where t.TeacherID == _Origin.ID
                  select t).ToList();
 
 
         }
         #endregion
         #region 签到
-        public void SignIn(double x,double y,int studentid)
+        public void SignIn(double x, double y, int studentid)
         {
 
             //时间段
@@ -378,7 +390,7 @@ namespace HapGp.ModelInstance
                 }
             }
 
-            
+
 
             db.Entry(new SigninModel() { ProjectID = scis[0].Key, StudentID = studentid, Time = DateTime.Now }).State =
                 Microsoft.EntityFrameworkCore.EntityState.Added;
@@ -388,7 +400,7 @@ namespace HapGp.ModelInstance
 
         }
 
-        public Dictionary<string, Dictionary<string,List<string>>> querySignIn(int projectid)
+        public Dictionary<string, Dictionary<string, List<string>>> querySignIn(int projectid)
         {
             if (Infos.Role != Enums.UserRole.Teacher)
             {
@@ -405,7 +417,7 @@ namespace HapGp.ModelInstance
                                           where t.TeacherID == _Origin.ID
                                           select t).ToList() : new List<ProjectModel>() { db.M_ProjectModels.Find(projectid) };
 
-            foreach (var  proj in projs)
+            foreach (var proj in projs)
             {
                 var plist = (from t in db.M_ProjectSelectModels
                              where t.ProjectID == proj.Key
@@ -413,7 +425,7 @@ namespace HapGp.ModelInstance
 
                 var signlist = (from t in db.M_SigninModel
                                 where t.ProjectID == proj.Key
-                                &&t.Time.Day==DateTime.Now.Day
+                                && t.Time.Day == DateTime.Now.Day
                                 select t.StudentID).ToList();
 
                 List<string> signinlist = new List<string>();
@@ -421,8 +433,8 @@ namespace HapGp.ModelInstance
                     signinlist.Add(((Userx)db.M_UserModels.Find(t)).Infos.Name);
 
                 List<string> usigninlist = new List<string>();
-                foreach(var t in plist)
-                    if(!signlist.Contains(t))
+                foreach (var t in plist)
+                    if (!signlist.Contains(t))
                         usigninlist.Add(((Userx)db.M_UserModels.Find(t)).Infos.Name);
                 res.Add("课程[" + proj.ProjectName + "]签到情况", new Dictionary<string, List<string>>() { { "已签到", signinlist }, { "未签到", usigninlist } });
             }
@@ -444,7 +456,7 @@ namespace HapGp.ModelInstance
                        where names.Contains(((Userx)t).Infos.Name)
                        select t.ID);
 
-            foreach(var t in ids)
+            foreach (var t in ids)
                 this.SignIn(0, 0, t);
         }
         #endregion

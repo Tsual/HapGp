@@ -38,9 +38,9 @@ namespace HapGp.BussinessProcessing
             if (model != null)
             {
                 model.IsFinished = true;
+                db.Entry(model).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                db.SaveChanges();
             }
-            db.Entry(model).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-            db.SaveChanges();
         }
 
         public static IEnumerable<MissionModel> QueryMissions(this Userx user)
@@ -49,7 +49,7 @@ namespace HapGp.BussinessProcessing
             {
                 var db = new AppDbContext();
                 return (from t in db.M_MissionModel
-                        where t.StudentID == user.Origin.ID && t.IsFinished==false
+                        where t.StudentID == user.Origin.ID
                         select t).ToList();
             }
             else if (user.Infos.Role == Enums.UserRole.Teacher)
